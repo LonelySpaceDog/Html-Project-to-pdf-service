@@ -1,0 +1,7 @@
+const app = require(`${__dirname}/app`);
+
+const port = 5520;
+
+app.listen(port, () => {
+  console.log(`listenong on port ${port}`);
+});

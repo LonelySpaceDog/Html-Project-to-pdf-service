@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Node.js</title>
+    <meta charset="utf-8" />
+  </head>
+  <body>
+    <h1>Upload file</h1>
+    <form
+      action="/upload"
+      method="post"
+      enctype="multipart/form-data"
+      id="wkhtmltopdf"
+    >
+      <label>Файл</label><br />
+      <input type="file" name="html.zip" /><br /><br />
+      <input type="checkbox" name="pageSize" value="pageSize" /><label
+        for="pageSize"
+      >
+        Page Size
+      </label>
+      <input type="submit" value="Send" />
+    </form>
+  </body>
+  <html></html>
+</html>
