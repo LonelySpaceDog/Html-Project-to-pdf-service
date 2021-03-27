@@ -8,6 +8,7 @@ const wkhtmltopdf = require('wkhtmltopdf');
 const morgan = require('morgan');
 const catchAsync = require(`${__dirname}/utils/catchAsync`);
 const anzip = require('anzip');
+const wkOpts = require(`${__dirname}/utils/wkOptions`);
 
 app.use(morgan('dev'));
 
@@ -22,12 +23,14 @@ app.post(
   '/upload',
   upload.single('html.zip'),
   catchAsync(async (req, res, next) => {
+    console.log(req.query);
+    const query = req.query;
+    wkOpts.forEach((el) => delete query[el]);
     const paths = {
       unzipped: `${__dirname}/../unzipped/${req.file.filename}/`,
       uploaded: `${__dirname}/../${req.file.path}`,
       pdf: `${__dirname}/../pdfFiles/${req.file.filename}.pdf`,
     };
-    console.log(req.query);
     await fsPromises.mkdir(paths.unzipped);
     const unzipInfo = await anzip(`${paths.uploaded}`, {
       outputPath: paths.unzipped,
@@ -50,10 +53,13 @@ app.post(
         /((href|src)=")\/?(?!http)(?!#)([^"]+)/g,
         '$1' + paths.unzipped + '$3',
       ),
-      {
-        resolveRelativeLinks: false,
-        enableLocalFileAccess: true,
-      },
+      Object.assign(
+        {
+          resolveRelativeLinks: false,
+          enableLocalFileAccess: true,
+        },
+        req.query,
+      ),
       (err) => {
         if (err) {
           res.status(400).json({
