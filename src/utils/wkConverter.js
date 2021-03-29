@@ -6,7 +6,7 @@ const { stat } = require('fs/promises');
 exports.wk = (html, options, pdfName, reqDate) => {
   let startHtmlToPdf; //Variable for logging time
   const pdfPath = `${__dirname}/../../pdfFiles/${pdfName}.pdf`;
-  loggerWk.info(JSON.parse(JSON.stringify(options)));
+  loggerWk.info(`[${reqDate}]` + JSON.stringify(options));
   const pdfStream = wkhtmltopdf(
     html.data.replace(
       /((href|src)=")\/?(?!http)(?!#)([^"]+)/g,
@@ -21,20 +21,23 @@ exports.wk = (html, options, pdfName, reqDate) => {
         logLevel: 'warn',
         debug: true,
       },
-      JSON.parse(JSON.stringify(options)),
+      options,
     ),
     reqDate,
   );
   const createPdf = createWriteStream(pdfPath);
-  //Event 'pipe' for log time of pdf creation
+  //Event 'pipe' to log time of pdf creation
   createPdf.on('pipe', () => {
     startHtmlToPdf = new Date();
   });
   pdfStream.pipe(createPdf).on('finish', async () => {
-    //Loging Format time
+    //Loging Format time and pdf size
     const pdfStats = await stat(pdfPath);
     loggerWk.info(`[${reqDate}] Formated in ${new Date() - startHtmlToPdf}\
- ms with size ${pdfStats.size / (1024 * 1024)} MiB`);
+ ms.Pdf size ${pdfStats.size / (1024 * 1024)} MiB`);
   });
-  return pdfStream;
+  pdfStream.on('error', (err) => {
+    createPdf.destroy(err);
+  });
+  return createPdf;
 };

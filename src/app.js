@@ -1,6 +1,9 @@
 const express = require('express');
 const app = express();
 const multer = require('multer');
+const morgan = require('morgan');
+const fsPromises = require('fs/promises');
+const { basename } = require('path');
 const upload = multer({
   dest: 'uploads/',
   limits: { fileSize: 2000000000 },
@@ -12,20 +15,18 @@ const upload = multer({
     }
   },
 });
-const morgan = require('morgan');
 const catchAsync = require(`${__dirname}/utils/catchAsync`);
 const wkOpts = require(`${__dirname}/utils/wkOptions`);
-const fsPromises = require('fs/promises');
-const { basename } = require('path');
 const { wk } = require(`${__dirname}/utils/wkConverter`);
 const { unzip } = require(`${__dirname}/utils/unzip`);
-const { loggerApp } = require(`${__dirname}/utils/logger`);
+const { loggerAppStream, loggerApp } = require(`${__dirname}/utils/logger`);
 const globalErrorHandler = require(`${__dirname}/controllers/errorController`);
 
-app.use(morgan('dev'));
+app.use(morgan('combined', { stream: loggerAppStream }));
+
 app.use(express.static(`${__dirname}/public/`));
 
-//TEST REASONS
+//MAIN TEST PAGE
 app.get('/', (req, res, _next) => {
   res.status(200).write(`${__dirname}/public/index.html`);
   res.end();
@@ -42,7 +43,8 @@ app.post(
       err.code = 'NO_FILE_WITH_REQUEST';
       return next(err);
     }
-    const reqDate = `[${new Date().toISOString()}]`; //Request init time;
+    //Request init time;
+    const reqDate = `[${new Date().toISOString()}][${req.ip}]`;
 
     loggerApp.info(
       `[${reqDate} ${req.file.size / (1024 * 1024)} MB zip file size`,
@@ -53,29 +55,27 @@ app.post(
       uploaded: `${__dirname}/../${req.file.path}`,
     };
     const unzipInfo = await unzip(paths.uploaded, paths.unzipped, reqDate);
-    //     loggerUnzip.info(`[${reqDate.toString}][UNZIPPING][ERROR] ${err}`);
-    // TODO: Good Error Handling
+    // TODO: Good Error Handling for this stream
     wk(unzipInfo, query, basename(unzipInfo.path), reqDate)
-      .on('error', (err) => {
-        err.code = 'WK_ERROR';
-        next(err);
-      })
-      .on('end', () => {
-        res.status(201).json({
-          status: 'success',
-          link: `${req.headers.host}/${basename(unzipInfo.path)}`,
-        });
+      .on('finish', (err) => {
+        res.status(201).json(
+          Object.assign({
+            status: 'success',
+            link: `${req.headers.host}/${basename(unzipInfo.path)}`,
+          }),
+        );
       })
       .on('close', () => {
         fsPromises.rm(`${paths.unzipped}${basename(unzipInfo.path)}`, {
           recursive: true,
           force: true,
         });
-        fsPromises.unlink(paths.uploaded);
+        fsPromises.rm(paths.uploaded, { recursive: true, force: true });
       });
 
     setTimeout(() => {
-      fsPromises.unlink(unzipInfo.path);
+      //Remove pdf file after one hour
+      fsPromises.rm(unzipInfo.path, { recursive: true, force: true });
     }, 3600000);
   }),
 );

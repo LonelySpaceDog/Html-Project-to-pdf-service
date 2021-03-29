@@ -58,7 +58,7 @@ if (process.env.NODE_ENV !== 'production') {
 }
 //Logger for App
 exports.loggerApp = winston.createLogger({
-  level: 'info',
+  level: 'http',
   format: winston.format.combine(
     winston.format.timestamp({
       format: 'YYYY-MM-DD HH:mm:ss',
@@ -76,7 +76,6 @@ exports.loggerApp = winston.createLogger({
     new winston.transports.File({ filename: 'debug.log' }),
   ],
 });
-exports.loggerApp;
 if (process.env.NODE_ENV !== 'production') {
   exports.loggerApp.add(
     new winston.transports.Console({
@@ -87,3 +86,7 @@ if (process.env.NODE_ENV !== 'production') {
     }),
   );
 }
+
+exports.loggerAppStream = {
+  write: (message) => exports.loggerApp.http(message),
+};

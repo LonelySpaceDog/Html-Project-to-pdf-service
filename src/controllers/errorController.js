@@ -1,10 +1,16 @@
 const fsPromises = require('fs/promises');
 const AppError = require(`${__dirname}/../utils/appError`);
-const { loggerApp, loggerUnzip } = require(`${__dirname}/../utils/logger`);
+const {
+  loggerWk,
+  loggerApp,
+  loggerUnzip,
+} = require(`${__dirname}/../utils/logger`);
 
 const sendErrorDev = (err, res) => {
-  if (err.name === 'Unzip') {
+  if (err.name === 'unzip') {
     loggerUnzip.error(err);
+  } else if (err.name === 'wkError') {
+    loggerWk.error(err);
   } else {
     loggerApp.error(err);
   }
@@ -17,11 +23,13 @@ const sendErrorDev = (err, res) => {
 };
 
 const sendErrorProd = (error, res, err) => {
-  if (error.name === 'App') {
-    loggerApp.error(err);
-  } else if (error.name === 'Unzip') {
+  if (err.name === 'unzip') {
     loggerUnzip.error(err);
-  } //Logging full error to console
+  } else if (err.name === 'wkError') {
+    loggerWk.error(err);
+  } else {
+    loggerApp.error(err);
+  }
   if (error.isOperational) {
     res.status(error.statusCode).json({
       status: error.status,
@@ -44,42 +52,56 @@ const largeFileErrorHandler = (error) => {
   const statusCode = 401;
   return new AppError(error.message, statusCode);
 };
-const noFileErrorHandler = (error) => {
-  const statusCode = 401;
+const postNoFileErrorHandler = (error) => {
+  const statusCode = error.statusCode || 401;
   const message = 'There is no file';
   return new AppError(message, statusCode);
 };
 const unzipBadErrorHandler = (error) => {
   const statusCode = 401;
   const message = 'something wrong with your archive';
-  const name = 'Unzip';
-  return new AppError(message, statusCode, name);
+  return new AppError(message, statusCode, 'unzip');
 };
 const wkArgsErrorHandling = (error) => {
   const statusCode = 401;
-  const message = 'Check arguments in query';
-  return new AppError(message, statusCode, 'wkError');
+  return new AppError(error.message, statusCode, 'wkError');
+};
+const getNoFileErrorHandler = (error) => {
+  const statusCode = error.statusCode;
+  const message = 'There is no pdf with that name';
+  return new AppError(error.message, statusCode, 'App');
 };
 
 module.exports = (err, req, res, _next) => {
   if (req.file) {
     fsPromises.rm(`${__dirname}/../../${req.file.path}`, { force: true });
   }
+  //TODO: status code error for NODE_ENV=development
   err.statusCode = err.statusCode || 500;
   err.status = err.status || 'error';
   if (process.env.NODE_ENV !== 'production') {
     return sendErrorDev(err, res);
   }
-  let error = { ...err };
+  let error = {
+    Error: err,
+    message: err.message,
+    stack: err.stack,
+    status: err.status,
+    statusCode: err.statusCode,
+    code: err.code,
+  };
   console.log(JSON.stringify(error));
-  if (error.code === 'ENOENT') {
+  if (error.code === 'ENOENT' && err.syscall !== 'stat') {
     error = openFileErrorHandler(error);
+  }
+  if (error.code === 'ENOENT' && err.syscall === 'stat') {
+    error = getNoFileErrorHandler(error);
   }
   if (error.code === 'LIMIT_FILE_SIZE') {
     error = largeFileErrorHandler(error);
   }
   if (error.code === 'NO_FILE_WITH_REQUEST') {
-    error = noFileErrorHandler(error);
+    error = postNoFileErrorHandler(error);
   }
   if (
     err.message.startsWith('multi-disk zip files') ||
@@ -87,7 +109,7 @@ module.exports = (err, req, res, _next) => {
   ) {
     error = unzipBadErrorHandler(error);
   }
-  if (error.code === 'WK_ERROR') {
+  if (error.code === 'WK_ARGS_ERROR') {
     error = wkArgsErrorHandling(error);
   }
   return sendErrorProd(error, res, err);

@@ -14,8 +14,6 @@ Test Task for JetStyle
 
   footerCenter/headerCenter <text\>  - Centered footer/header text
 
-  footerFontName/headerFontName <name\> - Set footer/header font name (must have them on your machine)
-
   footerFontSize/headerFontSize <size\>- Set footer/header font size (default 12)
 
   footerHtml/headerHtml <url\> - Adds a html footer
