@@ -4,7 +4,7 @@ const { createWriteStream } = require('fs');
 const { stat } = require('fs/promises');
 const winston = require('winston');
 
-exports.wk = (html, options, pdfName, reqDate) => {
+exports.wk = (html, options, pdfName, reqDate, next) => {
   let startHtmlToPdf; //Variable for logging time
   const pdfPath = `${__dirname}/../../pdfFiles/${pdfName}.pdf`;
   const pdfStream = wkhtmltopdf(
@@ -17,6 +17,7 @@ exports.wk = (html, options, pdfName, reqDate) => {
         resolveRelativeLinks: false,
         enableLocalFileAccess: true,
         loadErrorHandling: 'ignore',
+        loadMediaErrorHandling: 'ignore',
         logLevel: 'warn',
         debug: true,
       },
@@ -29,7 +30,7 @@ exports.wk = (html, options, pdfName, reqDate) => {
   createPdf.on('pipe', () => {
     startHtmlToPdf = new Date();
   });
-  pdfStream.on('error', (err) => loggerWk.info(err.message));
+  // pdfStream.on('error', (err) => next(err));
   pdfStream.pipe(createPdf).on('finish', async () => {
     //Loging Format time
     const pdfStats = await stat(pdfPath);

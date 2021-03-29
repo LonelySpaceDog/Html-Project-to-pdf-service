@@ -54,22 +54,28 @@ app.post(
     };
     const unzipInfo = await unzip(paths.uploaded, paths.unzipped, reqDate);
     //     loggerUnzip.info(`[${reqDate.toString}][UNZIPPING][ERROR] ${err}`);
-
     wk(unzipInfo, query, basename(unzipInfo.path), reqDate).on('close', () => {
+      fsPromises.rm(`${paths.unzipped}${basename(unzipInfo.path)}`, {
+        recursive: true,
+        force: true,
+      });
+      fsPromises.unlink(paths.uploaded);
       res.status(201).json({
         status: 'success',
         link: `${req.headers.host}/${basename(unzipInfo.path)}`,
       });
     });
 
-    res.on('close', () => {
-      fsPromises.unlink(paths.uploaded);
-    });
+    res.on('close', () => {});
+    setTimeout(() => {
+      fsPromises.unlink(unzipInfo.path);
+    }, 3600000);
   }),
 );
 
 app.get('/:pdf', (req, res, next) => {
   res.download(`${__dirname}/../pdfFiles/${req.params.pdf}.pdf`);
+  res.on('error', (err) => next(err));
 });
 
 app.use(globalErrorHandler);

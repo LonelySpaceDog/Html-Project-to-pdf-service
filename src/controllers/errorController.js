@@ -1,3 +1,4 @@
+const fsPromises = require('fs/promises');
 const AppError = require(`${__dirname}/../utils/appError`);
 const { loggerApp, loggerUnzip } = require(`${__dirname}/../utils/logger`);
 
@@ -45,7 +46,7 @@ const largeFileErrorHandler = (error) => {
 };
 const noFileErrorHandler = (error) => {
   const statusCode = 401;
-  const message = 'Please Load Your File';
+  const message = 'There is no file';
   return new AppError(message, statusCode);
 };
 const unzipBadErrorHandler = (error) => {
@@ -56,6 +57,9 @@ const unzipBadErrorHandler = (error) => {
 };
 
 module.exports = (err, req, res, _next) => {
+  if (req.file) {
+    fsPromises.rm(`${__dirname}/../../${req.file.path}`, { force: true });
+  }
   err.statusCode = err.statusCode || 500;
   err.status = err.status || 'error';
   if (process.env.NODE_ENV !== 'production') {

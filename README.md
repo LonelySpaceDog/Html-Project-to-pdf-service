@@ -1,6 +1,14 @@
 # Html-Project-to-pdf-service
 
-# Awailable Options(query) for Request
+# Routes
+
+ `GET /` - get sample main page
+ 
+ `POST /upload` - send form-data with enctype = multipart/form-data and file with name=html.zip field and get link to pdf file in json
+ 
+ `GET /:pdf` - get converted pdf with name from `POST /upload` response
+
+# Awailable query for */upload*
 
   noBackground <boolean\> - Do not print background
 
@@ -22,13 +30,6 @@
 
   printMediaType  <boolean\> - Use print media-type instead of screen 
 
-  loadErrorHandling <handler\> - Specify how to handle pages that fail to
-                                      load: abort, ignore or skip (default
-                                      abort) 
-
-  loadMediaErrorHandling <handler\> - Specify how to media files pages that fail to
-                                      load: abort, ignore or skip (default
-                                      abort)
   disableJavascript  <boolean\> - Do not allow web pages to run javascript 
 
   enableForms <boolean\> - Turn HTML form fields into pdf form fields

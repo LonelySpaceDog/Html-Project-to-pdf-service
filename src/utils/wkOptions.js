@@ -18,8 +18,6 @@ const options = [
   'headerSpacing',
   'pageSize',
   'printMediaType',
-  'loadErrorHandling',
-  'loadMediaErrorHandling',
   'disableJavascript',
   'enableForms',
   'disableExternalLinks',
