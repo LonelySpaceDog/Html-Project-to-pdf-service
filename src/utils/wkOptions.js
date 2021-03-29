@@ -1,4 +1,4 @@
-module.exports = [
+const options = [
   'noBackground',
   'footerCenter',
   'footerFontName',
@@ -35,3 +35,12 @@ module.exports = [
   'lowquality',
   'minimumFontSize',
 ];
+
+exports.filterWkOpts = (raw, allowed = options) => {
+  return Object.keys(raw)
+    .filter((key) => allowed.includes(key))
+    .reduce((obj, key) => {
+      obj[key] = raw[key];
+      return obj;
+    }, {});
+};

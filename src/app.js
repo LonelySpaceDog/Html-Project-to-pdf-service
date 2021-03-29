@@ -1,91 +1,77 @@
 const express = require('express');
 const app = express();
 const multer = require('multer');
-const upload = multer({ dest: 'uploads/', limits: { fileSize: 2000000000 } });
-const fsPromises = require('fs/promises');
-const { createWriteStream, createReadStream } = require('fs');
-const wkhtmltopdf = require('wkhtmltopdf');
+const upload = multer({
+  dest: 'uploads/',
+  limits: { fileSize: 2000000000 },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype !== 'application/zip') {
+      cb(new Error('Your File must be zip format'), false);
+    } else {
+      cb(null, true);
+    }
+  },
+});
 const morgan = require('morgan');
 const catchAsync = require(`${__dirname}/utils/catchAsync`);
-const anzip = require('anzip');
 const wkOpts = require(`${__dirname}/utils/wkOptions`);
+const fsPromises = require('fs/promises');
+const { basename } = require('path');
+const { wk } = require(`${__dirname}/utils/wkConverter`);
+const { unzip } = require(`${__dirname}/utils/unzip`);
+const { loggerApp } = require(`${__dirname}/utils/logger`);
+const globalErrorHandler = require(`${__dirname}/controllers/errorController`);
 
 app.use(morgan('dev'));
-
 app.use(express.static(`${__dirname}/public/`));
 
+//TEST REASONS
 app.get('/', (req, res, _next) => {
   res.status(200).write(`${__dirname}/public/index.html`);
   res.end();
 });
+//
 
 app.post(
   '/upload',
   upload.single('html.zip'),
   catchAsync(async (req, res, next) => {
-    console.log(req.query);
-    const query = req.query;
-    wkOpts.forEach((el) => delete query[el]);
+    //Unzipping
+    if (!req.file) {
+      const err = new Error('Please load your file');
+      err.code = 'NO_FILE_WITH_REQUEST';
+      return next(err);
+    }
+    const reqDate = `[${new Date().toISOString()}]`; //Request init time;
+
+    loggerApp.info(
+      `[${reqDate} ${req.file.size / (1024 * 1024)} MB zip file size`,
+    );
+    const query = wkOpts.filterWkOpts(req.query);
     const paths = {
-      unzipped: `${__dirname}/../unzipped/${req.file.filename}/`,
+      unzipped: `${__dirname}/../unzipped/`,
       uploaded: `${__dirname}/../${req.file.path}`,
-      pdf: `${__dirname}/../pdfFiles/${req.file.filename}.pdf`,
     };
-    await fsPromises.mkdir(paths.unzipped);
-    const unzipInfo = await anzip(`${paths.uploaded}`, {
-      outputPath: paths.unzipped,
-      outputContent: false,
-      disableSave: false,
-    });
-    console.log(`Unzipped in ${unzipInfo.duration * 1000} ms`);
-    const fileList = unzipInfo.files.map((el) => el.name);
-    console.log('Files in archive: ' + fileList);
+    const unzipInfo = await unzip(paths.uploaded, paths.unzipped, reqDate);
+    //     loggerUnzip.info(`[${reqDate.toString}][UNZIPPING][ERROR] ${err}`);
 
-    unzipInfo.data = await fsPromises.readFile(
-      `${paths.unzipped}index.html`,
-      'utf8',
-    );
-
-    //Variable for log time
-    let startHtmlToPdf;
-    const pdfStream = wkhtmltopdf(
-      unzipInfo.data.replace(
-        /((href|src)=")\/?(?!http)(?!#)([^"]+)/g,
-        '$1' + paths.unzipped + '$3',
-      ),
-      Object.assign(
-        {
-          resolveRelativeLinks: false,
-          enableLocalFileAccess: true,
-        },
-        req.query,
-      ),
-      (err) => {
-        if (err) {
-          res.status(400).json({
-            status: 'fail',
-            error: err,
-          });
-          return next(err);
-        }
-      },
-    );
-    const createPdf = createWriteStream(paths.pdf);
-    //Event 'pipe' for log time of pdf creation
-    createPdf.on('pipe', () => {
-      console.log('piped');
-      startHtmlToPdf = new Date();
-    });
-    pdfStream.pipe(createPdf).on('finish', () => {
-      //Loging Format time
-      console.log(`Formated in ${new Date() - startHtmlToPdf} ms`);
-      const readPdf = createReadStream(paths.pdf);
-      readPdf.pipe(res);
-      res.on('close', () => {
-        fsPromises.unlink(paths.uploaded);
+    wk(unzipInfo, query, basename(unzipInfo.path), reqDate).on('close', () => {
+      res.status(201).json({
+        status: 'success',
+        link: `${req.headers.host}/${basename(unzipInfo.path)}`,
       });
+    });
+
+    res.on('close', () => {
+      fsPromises.unlink(paths.uploaded);
     });
   }),
 );
+
+app.get('/:pdf', (req, res, next) => {
+  res.download(`${__dirname}/../pdfFiles/${req.params.pdf}.pdf`);
+});
+
+app.use(globalErrorHandler);
 
 module.exports = app;

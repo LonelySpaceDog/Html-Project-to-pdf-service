@@ -1,5 +1,4 @@
 const app = require(`${__dirname}/app`);
-
 const port = 5520;
 
 app.listen(port, () => {
