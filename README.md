@@ -36,12 +36,7 @@ Test Task for JetStyle
   
   noImages <boolean\> - Do not load or print images
   
-  defaultHeader <boolean\> - Add a default header, with the name of the
-                                      page to the left, and the page number to
-                                      the right, this is short for:```
-headerLeft='-'
-headerRight="'[page]/[toPage]' --top 2cm"
-headerLine=true```
+  defaultHeader <boolean\> - Add a default header, with the the page number to the right
                                       
   pageHeight <unitreal\> - Page height
 
