@@ -33,12 +33,17 @@ const options = [
   'lowquality',
   'minimumFontSize',
 ];
-
+//TODO:Make Options type checker
 exports.filterWkOpts = (raw, allowed = options) => {
   return Object.keys(raw)
     .filter((key) => allowed.includes(key))
     .reduce((obj, key) => {
       obj[key] = raw[key];
+      if (obj[key] === 'true') {
+        obj[key] = true;
+      } else if (obj[key] === 'false') {
+        obj[key] = false;
+      }
       return obj;
     }, {});
 };

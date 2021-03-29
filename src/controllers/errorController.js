@@ -16,16 +16,16 @@ const sendErrorDev = (err, res) => {
   });
 };
 
-const sendErrorProd = (err, res) => {
-  if (err.name === 'App') {
+const sendErrorProd = (error, res, err) => {
+  if (error.name === 'App') {
     loggerApp.error(err);
-  } else if (err.name === 'Unzip') {
+  } else if (error.name === 'Unzip') {
     loggerUnzip.error(err);
   } //Logging full error to console
-  if (err.isOperational) {
-    res.status(err.statusCode).json({
-      status: err.status,
-      message: err.message,
+  if (error.isOperational) {
+    res.status(error.statusCode).json({
+      status: error.status,
+      message: error.message,
     });
   } else {
     res.status(500).json({
@@ -55,6 +55,11 @@ const unzipBadErrorHandler = (error) => {
   const name = 'Unzip';
   return new AppError(message, statusCode, name);
 };
+const wkArgsErrorHandling = (error) => {
+  const statusCode = 401;
+  const message = 'Check arguments in query';
+  return new AppError(message, statusCode, 'wkError');
+};
 
 module.exports = (err, req, res, _next) => {
   if (req.file) {
@@ -82,5 +87,8 @@ module.exports = (err, req, res, _next) => {
   ) {
     error = unzipBadErrorHandler(error);
   }
-  return sendErrorProd(error, res);
+  if (error.code === 'WK_ERROR') {
+    error = wkArgsErrorHandling(error);
+  }
+  return sendErrorProd(error, res, err);
 };

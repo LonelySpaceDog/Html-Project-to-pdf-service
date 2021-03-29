@@ -54,19 +54,26 @@ app.post(
     };
     const unzipInfo = await unzip(paths.uploaded, paths.unzipped, reqDate);
     //     loggerUnzip.info(`[${reqDate.toString}][UNZIPPING][ERROR] ${err}`);
-    wk(unzipInfo, query, basename(unzipInfo.path), reqDate).on('close', () => {
-      fsPromises.rm(`${paths.unzipped}${basename(unzipInfo.path)}`, {
-        recursive: true,
-        force: true,
+    // TODO: Good Error Handling
+    wk(unzipInfo, query, basename(unzipInfo.path), reqDate)
+      .on('error', (err) => {
+        err.code = 'WK_ERROR';
+        next(err);
+      })
+      .on('end', () => {
+        res.status(201).json({
+          status: 'success',
+          link: `${req.headers.host}/${basename(unzipInfo.path)}`,
+        });
+      })
+      .on('close', () => {
+        fsPromises.rm(`${paths.unzipped}${basename(unzipInfo.path)}`, {
+          recursive: true,
+          force: true,
+        });
+        fsPromises.unlink(paths.uploaded);
       });
-      fsPromises.unlink(paths.uploaded);
-      res.status(201).json({
-        status: 'success',
-        link: `${req.headers.host}/${basename(unzipInfo.path)}`,
-      });
-    });
 
-    res.on('close', () => {});
     setTimeout(() => {
       fsPromises.unlink(unzipInfo.path);
     }, 3600000);

@@ -7,7 +7,6 @@ exports.loggerUnzip = winston.createLogger({
     winston.format.errors({ stack: true }),
     winston.format.json(),
     winston.format.colorize(),
-    winston.format.prettyPrint(),
   ),
   defaultMeta: { service: 'Unzipping' },
   transports: [
@@ -25,7 +24,6 @@ if (process.env.NODE_ENV !== 'production') {
       format: winston.format.combine(
         winston.format.colorize(),
         winston.format.simple(),
-        winston.format.prettyPrint(),
       ),
     }),
   );
@@ -37,7 +35,6 @@ exports.loggerWk = winston.createLogger({
     winston.format.errors({ stack: true }),
     winston.format.json(),
     winston.format.colorize(),
-    winston.format.prettyPrint(),
   ),
   defaultMeta: { service: 'WkHtmlToPdf' },
   transports: [
@@ -55,8 +52,6 @@ if (process.env.NODE_ENV !== 'production') {
       format: winston.format.combine(
         winston.format.colorize(),
         winston.format.simple(),
-
-        winston.format.prettyPrint(),
       ),
     }),
   );
@@ -68,7 +63,6 @@ exports.loggerApp = winston.createLogger({
     winston.format.timestamp({
       format: 'YYYY-MM-DD HH:mm:ss',
     }),
-    winston.format.prettyPrint(),
     winston.format.errors({ stack: true }),
     winston.format.json(),
     winston.format.colorize(),
@@ -89,7 +83,6 @@ if (process.env.NODE_ENV !== 'production') {
       format: winston.format.combine(
         winston.format.simple(),
         winston.format.colorize(),
-        winston.format.prettyPrint(),
       ),
     }),
   );
