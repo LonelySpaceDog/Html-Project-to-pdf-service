@@ -8,7 +8,7 @@
  
  `GET /:pdf` - get converted pdf with name from `POST /upload` response
 
-# Awailable query for */upload*
+# Available query for */upload*
 
   noBackground <boolean\> - Do not print background
 
