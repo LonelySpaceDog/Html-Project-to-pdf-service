@@ -7,13 +7,14 @@
   "scripts": {
     "start:dev": "nodemon src/server.js --ignore \"unzipped/*\" --ignore \"uploads/*\" --ignore \"src/public/*\"",
     "start:prod": "NODE_ENV=production nodemon src/server.js --ignore \"unzipped/*\" --ignore \"uploads/*\" --ignore \"src/public/*\"",
-    "debug" : "ndb src/server.js",
+    "debug": "ndb src/server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Viacheslav Vasiliev",
   "license": "MIT",
   "dependencies": {
     "anzip": "^0.2.0",
+    "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "morgan": "^1.10.0",
     "multer": "^1.4.2",
