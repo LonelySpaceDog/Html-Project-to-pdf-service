@@ -9,6 +9,8 @@ Test Task for JetStyle
  `GET /:pdf` - get converted pdf with name from `POST /upload` response link
 
 # Available query for */upload*
+  
+  EXAMPLE: `.../upload?noBackground=true&pageSize=A3`
 
   noBackground <boolean\> - Do not print background
 
