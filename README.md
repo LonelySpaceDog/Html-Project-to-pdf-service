@@ -4,9 +4,9 @@ Test Task for JetStyle
 
  `GET /` - get sample main page
  
- `POST /upload` - send form-data with enctype = multipart/form-data and file with name=html.zip field and get link to pdf file in json
+ `POST /upload` - send form-data with enctype = multipart/form-data and file with name=html.zip field and get link to pdf file from json field
  
- `GET /:pdf` - get converted pdf with name from `POST /upload` response
+ `GET /:pdf` - get converted pdf with name from `POST /upload` response link
 
 # Available query for */upload*
 
@@ -36,12 +36,7 @@ Test Task for JetStyle
   
   noImages <boolean\> - Do not load or print images
   
-  defaultHeader <boolean\> - Add a default header, with the name of the
-                                      page to the left, and the page number to
-                                      the right, this is short for:
-                                      --header-left='[webpage]'
-                                      --header-right='[page]/[toPage]' --top 2cm
-                                      --header-line
+  defaultHeader <boolean\> - Add a default header, with the the page number to the right
                                       
   pageHeight <unitreal\> - Page height
 
