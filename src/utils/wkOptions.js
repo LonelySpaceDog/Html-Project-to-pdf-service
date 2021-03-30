@@ -1,4 +1,6 @@
 const validator = require('validator');
+
+const validError = Symbol('validError');
 const pageSizesArray = [
   'a0',
   'a1',
@@ -33,13 +35,15 @@ const pageSizesArray = [
 ];
 //Object with validation
 const validation = {
-  validBoolean: (str) => (validator.isBoolean(str) ? Boolean(str) : undefined),
-  validNumber: (str) => ((+str).isNaN() ? undefined : +str),
+  validBoolean: (str) => (validator.isBoolean(str) ? Boolean(str) : validError),
+  validNumber: (str) => ((+str).isNaN() ? validError : +str),
   validOrientation: (str) =>
-    str.toLowerCase().match(/\blandscape\b|\bportrait\b/) ? str : undefined,
-  validUrl: (str) => (validator.isUrl(str) ? str : undefined),
+    str.toLowerCase() === 'landscape' || str.toLowerCase() === 'portrait'
+      ? str
+      : validError,
+  validUrl: (str) => (validator.isUrl(str) ? str : validError),
   validPageSize: (str) =>
-    pageSizesArray.includes(str.toLowerCase()) ? str : undefined,
+    pageSizesArray.includes(str.toLowerCase()) ? str : validError,
 };
 //Available query options with validation functions
 const options = {
@@ -85,7 +89,7 @@ exports.filterWkOpts = (raw, allowed = options) => {
     .filter((key) => Object.keys(allowed).includes(key))
     .reduce((obj, key) => {
       obj[key] = allowed[key](raw[key]);
-      if (!obj[key]) {
+      if (obj[key] === validError) {
         const err = new Error('Bad query value at ' + key);
         err.code = 'WK_ARGS_ERROR';
         throw err;
