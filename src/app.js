@@ -57,11 +57,13 @@ app.post(
     const unzipInfo = await unzip(paths.uploaded, paths.unzipped, reqDate);
     // TODO: Good Error Handling for this stream
     wk(unzipInfo, query, basename(unzipInfo.path), reqDate)
-      .on('finish', (err) => {
+      .on('finish', () => {
         res.status(201).json(
           Object.assign({
             status: 'success',
-            link: `${req.headers.host}/${basename(unzipInfo.path)}`,
+            link: `${req.protocol}://${req.get('host')}/${basename(
+              unzipInfo.path,
+            )}`,
           }),
         );
       })
