@@ -1,5 +1,5 @@
 diff --git a/node_modules/wkhtmltopdf/index.js b/node_modules/wkhtmltopdf/index.js
-index d2e985d..4deac90 100644
+index d2e985d..3f90581 100644
 --- a/node_modules/wkhtmltopdf/index.js
 +++ b/node_modules/wkhtmltopdf/index.js
 @@ -1,6 +1,8 @@
@@ -176,7 +176,7 @@ index d2e985d..4deac90 100644
      }
      child.removeAllListeners('exit');
      child.kill();
-@@ -157,29 +184,39 @@ function wkhtmltopdf(input, options, callback) {
+@@ -157,29 +184,37 @@ function wkhtmltopdf(input, options, callback) {
      }
    }
  
@@ -192,9 +192,8 @@ index d2e985d..4deac90 100644
        options.debug(data);
      } else if (options.debug) {
 -      console.log('[node-wkhtmltopdf] [debug] ' + data.toString());
-+      const logLevel = data.toString().startsWith('warn') ? 'warn' : 'error';
-+      loggerWk.log(
-+        logLevel,
++      const logLevel = data.toString().startsWith('Warn') ? 'warn' : 'error';
++      loggerWk[logLevel](
 +        reqDate + '[node-wkhtmltopdf] [debug] ' + data.toString(),
 +      );
      }
@@ -214,9 +213,8 @@ index d2e985d..4deac90 100644
          options.debug(data);
        } else if (options.debug) {
 -        console.log('[node-wkhtmltopdf] [debugStdOut] ' + data.toString());
-+        const logLevel = data.toString().startsWith('warn') ? 'warn' : 'error';
-+        loggerWk.info(
-+          logLevel,
++        const logLevel = data.toString().startsWith('Warn') ? 'warn' : 'error';
++        loggerWk[loglevel](
 +          reqDate + '[node-wkhtmltopdf] [debugStdOut] ' + data.toString(),
 +        );
        }
