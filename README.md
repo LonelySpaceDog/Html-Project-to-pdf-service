@@ -1,5 +1,27 @@
 # Html-Project-to-pdf-service
 Test Task for JetStyle
+
+# Install
+
+  ```sh
+  git clone https://github.com/LonelySpaceDog/Html-Project-to-pdf-service
+  cd Html-Project-to-pdf-service
+  npm install
+  ```
+
+Port configuration in config.env Default *port is 5520*
+
+# Deploy with docker 
+
+change `EXPOSE` field in Dockerfile to desirable port.
+than ```docker build --tag html-to-pdf-docker .```
+
+To run docker with default port:
+
+``` sh
+docker run --publish 5520:5520 html-to-pdf-docker
+```
+
 # Routes
 
  `GET /` - get sample main page
